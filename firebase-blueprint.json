@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Hệ thống người dùng (Admin/Staff)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "staff"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Thông tin khách hàng đóng thuế",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "pass": { "type": "string" },
+        "cccd": { "type": "string" },
+        "taxCode": { "type": "string" },
+        "address": { "type": "string" },
+        "customerType": { "type": "string", "enum": ["individual", "business"] },
+        "taxCycle": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "nextTaxDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["normal", "due-soon", "overdue"] },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "taxCode", "customerType", "taxCycle", "startDate", "nextTaxDate"]
+    },
+    "TaxRecord": {
+      "title": "TaxRecord",
+      "description": "Lịch sử các kỳ đóng thuế",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "period": { "type": "string" },
+        "amount": { "type": "number" },
+        "paymentDate": { "type": "string", "format": "date" },
+        "note": { "type": "string" },
+        "attachmentUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "period", "paymentDate"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Thông báo hệ thống về hạn đóng thuế",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "type": { "type": "string", "enum": ["due-soon", "overdue"] },
+        "message": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "type", "message", "isRead", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "Thông tin chi tiết người dùng hệ thống"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Danh sách khách hàng"
+    },
+    "/customers/{customerId}/taxRecords/{recordId}": {
+      "schema": "TaxRecord",
+      "description": "Lịch sử đóng thuế của từng khách hàng"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Danh sách thông báo"
+    }
+  }
+}
