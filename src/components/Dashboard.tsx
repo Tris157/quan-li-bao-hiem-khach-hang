@@ -1,69 +1,41 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import { getCustomers } from '../lib/dataStore';
 import { Customer } from '../types';
 import { Users, AlertCircle, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { cn } from '../lib/utils';
-import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
 import { checkExpirations } from './NotificationCenter';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, dueSoon: 0, overdue: 0 });
   const [urgentCustomers, setUrgentCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        await checkExpirations();
-        const customersRef = collection(db, 'customers');
-        const q = query(customersRef);
-        const querySnapshot = await getDocs(q);
-        
-        const allCustomers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
-        
-        const now = new Date();
-        let total = allCustomers.length;
-        let dueSoon = 0;
-        let overdue = 0;
-        
-        const urgent = allCustomers
-          .filter(c => {
-            const nextDate = parseISO(c.nextTaxDate);
-            const diff = differenceInDays(nextDate, now);
-            
-            if (diff < 0) {
-              overdue++;
-              return true;
-            }
-            if (diff <= 7) {
-              dueSoon++;
-              return true;
-            }
-            return false;
-          })
-          .sort((a, b) => parseISO(a.nextTaxDate).getTime() - parseISO(b.nextTaxDate).getTime())
-          .slice(0, 6);
+    const fetchData = async () => {
+      await checkExpirations();
+      const allCustomers = await getCustomers();
+      const now = new Date();
+      let dueSoon = 0;
+      let overdue = 0;
 
-        setStats({ total, dueSoon, overdue });
-        setUrgentCustomers(urgent);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError('Không có quyền truy cập dữ liệu. Vui lòng kiểm tra lại tài khoản.');
-        try {
-          handleFirestoreError(err, OperationType.LIST, 'customers');
-        } catch (e) {
-          // Error already logged
-        }
-      } finally {
-        setLoading(false);
-      }
+      const urgent = allCustomers
+        .filter(c => {
+          const nextDate = parseISO(c.nextTaxDate);
+          const diff = differenceInDays(nextDate, now);
+          if (diff < 0) { overdue++; return true; }
+          if (diff <= 7) { dueSoon++; return true; }
+          return false;
+        })
+        .sort((a, b) => parseISO(a.nextTaxDate).getTime() - parseISO(b.nextTaxDate).getTime())
+        .slice(0, 6);
+
+      setStats({ total: allCustomers.length, dueSoon, overdue });
+      setUrgentCustomers(urgent);
+      setLoading(false);
     };
-
-    fetchDashboardData();
+    fetchData();
   }, []);
 
   const statCards = [
@@ -78,14 +50,6 @@ export default function Dashboard() {
     </div>
     <div className="h-64 bg-stone-200 rounded-2xl" />
   </div>;
-
-  if (error) return (
-    <div className="p-8 bg-red-50 border border-red-100 rounded-2xl text-center">
-      <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-      <h2 className="text-lg font-bold text-red-900">{error}</h2>
-      <p className="text-red-600 text-sm mt-2">Nếu bạn là quản trị viên, hãy đảm bảo tài khoản đã được cấp quyền.</p>
-    </div>
-  );
 
   return (
     <div className="space-y-8">
@@ -124,18 +88,11 @@ export default function Dashboard() {
               const nextDate = parseISO(customer.nextTaxDate);
               const diff = differenceInDays(nextDate, new Date());
               const isOverdue = diff < 0;
-
               return (
-                <Link 
-                  key={customer.id} 
-                  to={`/customers/${customer.id}`}
-                  className="flex items-center justify-between p-4 hover:bg-stone-50 transition-colors"
-                >
+                <Link key={customer.id} to={`/customers/${customer.id}`}
+                  className="flex items-center justify-between p-4 hover:bg-stone-50 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "h-10 w-10 rounded-full flex items-center justify-center font-bold text-white",
-                      isOverdue ? "bg-red-500" : "bg-amber-500"
-                    )}>
+                    <div className={cn("h-10 w-10 rounded-full flex items-center justify-center font-bold text-white", isOverdue ? "bg-red-500" : "bg-amber-500")}>
                       {customer.fullName.charAt(0)}
                     </div>
                     <div>
@@ -144,10 +101,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={cn(
-                      "text-sm font-medium",
-                      isOverdue ? "text-red-600" : "text-amber-600"
-                    )}>
+                    <p className={cn("text-sm font-medium", isOverdue ? "text-red-600" : "text-amber-600")}>
                       {isOverdue ? `Quá hạn ${Math.abs(diff)} ngày` : `Còn ${diff} ngày`}
                     </p>
                     <p className="text-xs text-stone-400">{format(nextDate, 'dd/MM/yyyy')}</p>

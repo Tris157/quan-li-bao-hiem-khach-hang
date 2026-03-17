@@ -1,0 +1,43 @@
+{
+  "customers": [
+    {
+      "fullName": "Nguy",
+      "pass": "",
+      "cccd": "",
+      "taxCode": "1234567890",
+      "address": "",
+      "customerType": "individual",
+      "taxCycle": "1_month",
+      "startDate": "2026-03-18",
+      "nextTaxDate": "2026-04-18",
+      "createdBy": "admin-local",
+      "id": "mmuxshprqc585sxgc",
+      "status": "normal",
+      "createdAt": "2026-03-17T18:19:23.439Z",
+      "updatedAt": "2026-03-17T18:19:23.439Z"
+    },
+    {
+      "fullName": "Nguyen Van Test",
+      "pass": "",
+      "cccd": "",
+      "taxCode": "1234567891",
+      "address": "",
+      "customerType": "individual",
+      "taxCycle": "1_month",
+      "startDate": "2026-03-18",
+      "nextTaxDate": "2026-04-18",
+      "createdBy": "admin-local",
+      "id": "mmuxst3j9x5sclr4z",
+      "status": "normal",
+      "createdAt": "2026-03-17T18:19:38.191Z",
+      "updatedAt": "2026-03-17T18:19:38.191Z"
+    }
+  ],
+  "taxRecords": [],
+  "notifications": [],
+  "settings": {
+    "telegramBotToken": "",
+    "telegramChatId": "",
+    "enableTelegram": false
+  }
+}

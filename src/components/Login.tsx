@@ -1,19 +1,38 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase';
-import { ShieldCheck, LogIn } from 'lucide-react';
+import { ShieldCheck, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
+
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      navigate('/');
-    } catch (error) {
-      console.error('Login failed:', error);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    // Small delay for UX feel
+    await new Promise(r => setTimeout(r, 500));
+
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      setError('Sai tài khoản hoặc mật khẩu!');
+      setLoading(false);
+      return;
     }
+
+    // Store login state
+    sessionStorage.setItem('taxpro_logged_in', 'true');
+    navigate('/');
+    // Force a re-render by dispatching storage event
+    window.dispatchEvent(new Event('login-success'));
+    setLoading(false);
   };
 
   return (
@@ -27,18 +46,71 @@ export default function Login() {
           <p className="mt-2 text-stone-500">Hệ thống quản lý thuế chuyên nghiệp</p>
         </div>
 
-        <div className="mt-8">
+        <form onSubmit={handleLogin} className="mt-8 space-y-5">
+          {error && (
+            <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-center text-sm font-medium text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label htmlFor="username" className="text-sm font-semibold text-stone-700">
+              Tài khoản
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm outline-none transition-all focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="Nhập tài khoản"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-semibold text-stone-700">
+              Mật khẩu
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-stone-200 px-4 py-3 pr-12 text-sm outline-none transition-all focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="Nhập mật khẩu"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
           <button
-            onClick={handleGoogleLogin}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 shadow-sm transition-all hover:bg-stone-50 hover:shadow-md active:scale-[0.98]"
+            type="submit"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
           >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="h-5 w-5" />
-            Đăng nhập với Google
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                <LogIn className="h-5 w-5" />
+                Đăng nhập
+              </>
+            )}
           </button>
-        </div>
+        </form>
 
         <div className="mt-6 text-center text-xs text-stone-400">
-          Bằng cách đăng nhập, bạn đồng ý với các điều khoản sử dụng của chúng tôi.
+          © 2026 TaxPro CRM. All rights reserved.
         </div>
       </div>
     </div>

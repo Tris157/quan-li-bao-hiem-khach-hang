@@ -1,6 +1,4 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
 import { UserProfile } from '../types';
 import { LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -14,8 +12,9 @@ export default function Navbar({ profile }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    sessionStorage.removeItem('taxpro_logged_in');
+    window.dispatchEvent(new Event('login-success'));
     navigate('/login');
   };
 
